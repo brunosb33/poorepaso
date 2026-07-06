@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POO · Del plano al objeto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d2740;
+    --bg-deep:#0a1f33;
+    --panel:#123a5c;
+    --panel-soft:#153f63;
+    --ink:#eaf3fa;
+    --ink-dim:#a9c4da;
+    --cyan:#7fd4ef;
+    --cyan-dim:rgba(127,212,239,0.35);
+    --amber:#f2a154;
+    --amber-soft:#3a2a1c;
+    --gold:#f2c14e;
+    --coral:#ef6f6c;
+    --line:rgba(234,243,250,0.14);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.55;
+    position:relative;
+  }
+  .grid-overlay{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:38px 38px;
+    opacity:0.5;
+    z-index:0;
+  }
+  main, header, footer{position:relative; z-index:1;}
+
+  h1,h2,h3, .mono{
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 6vw;
+    background:rgba(10,31,51,0.85);
+    backdrop-filter:blur(6px);
+    position:sticky;
+    top:0;
+    border-bottom:1px solid var(--line);
+    z-index:10;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .topbar .brand{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    letter-spacing:0.06em;
+    color:var(--cyan);
+  }
+  .topbar .brand b{color:var(--ink);}
+  .topbar nav{display:flex; gap:18px; flex-wrap:wrap;}
+  .topbar nav a{
+    color:var(--ink-dim);
+    text-decoration:none;
+    font-size:0.85rem;
+    font-family:'IBM Plex Mono', monospace;
+    border-bottom:1px solid transparent;
+    padding-bottom:2px;
+    transition:color .2s, border-color .2s;
+  }
+  .topbar nav a:hover, .topbar nav a:focus-visible{color:var(--cyan); border-color:var(--cyan);}
+
+  section{
+    padding:70px 6vw;
+    max-width:1180px;
+    margin:0 auto;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--gold);
+    letter-spacing:0.14em;
+    font-size:0.78rem;
+    text-transform:uppercase;
+    margin:0 0 10px 0;
+  }
+  h1{
+    font-size:clamp(2rem, 4.2vw, 3.1rem);
+    margin:0 0 18px 0;
+    line-height:1.1;
+    font-weight:700;
+  }
+  h1 span{color:var(--amber);}
+  .lead{
+    max-width:640px;
+    color:var(--ink-dim);
+    font-size:1.05rem;
+    margin-bottom:8px;
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding-top:56px;
+    display:grid;
+    grid-template-columns:1.05fr 1fr;
+    gap:48px;
+    align-items:center;
+  }
+  @media (max-width:880px){ .hero{grid-template-columns:1fr;} }
+
+  .blueprint-box{
+    background:var(--panel);
+    border:1.5px solid var(--cyan-dim);
+    border-radius:var(--radius);
+    padding:0;
+    overflow:hidden;
+    box-shadow:0 0 0 1px rgba(127,212,239,0.08), 0 30px 60px -30px rgba(0,0,0,0.6);
+  }
+  .blueprint-title{
+    background:rgba(127,212,239,0.1);
+    color:var(--cyan);
+    font-family:'IBM Plex Mono', monospace;
+    text-align:center;
+    padding:10px 0;
+    font-weight:600;
+    letter-spacing:0.04em;
+    border-bottom:1.5px solid var(--cyan-dim);
+  }
+  .blueprint-section{
+    padding:14px 20px;
+    border-bottom:1px dashed var(--cyan-dim);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.86rem;
+  }
+  .blueprint-section:last-child{border-bottom:none;}
+  .blueprint-section .label{
+    color:var(--ink-dim);
+    font-size:0.68rem;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    margin-bottom:6px;
+    display:block;
+  }
+  .blueprint-section .row{ color:var(--ink); opacity:0.92; }
+  .blueprint-section .row .t{ color:var(--gold); }
+  .blueprint-section.methods .row .t{ color:var(--coral); }
+  .blueprint-section .row + .row{margin-top:4px;}
+
+  .hero-anim{
+    margin-top:22px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.82rem;
+    color:var(--ink-dim);
+  }
+  .stamp-track{
+    flex:1;
+    height:2px;
+    background:repeating-linear-gradient(90deg, var(--cyan-dim) 0 6px, transparent 6px 12px);
+    position:relative;
+  }
+  .stamp-dot{
+    position:absolute;
+    top:50%;
+    left:0;
+    width:10px;height:10px;
+    border-radius:50%;
+    background:var(--amber);
+    transform:translate(-50%,-50%);
+    animation:travel 3.2s ease-in-out infinite;
+    box-shadow:0 0 12px 2px rgba(242,161,84,0.6);
+  }
+  @keyframes travel{
+    0%{left:0%; background:var(--cyan); box-shadow:0 0 10px 2px rgba(127,212,239,0.6);}
+    45%{left:100%; background:var(--cyan); box-shadow:0 0 10px 2px rgba(127,212,239,0.6);}
+    55%{left:100%; background:var(--amber); box-shadow:0 0 14px 3px rgba(242,161,84,0.7);}
+    100%{left:100%; background:var(--amber); box-shadow:0 0 14px 3px rgba(242,161,84,0.7);}
+  }
+
+  /* ---------- CONCEPT CARDS ---------- */
+  .concepts-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:18px;
+    margin-top:34px;
+  }
+  @media (max-width:900px){ .concepts-grid{grid-template-columns:1fr 1fr;} }
+  @media (max-width:520px){ .concepts-grid{grid-template-columns:1fr;} }
+
+  .concept-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 20px;
+    border-top:3px solid var(--accent, var(--cyan));
+  }
+  .concept-card h3{
+    margin:0 0 8px 0;
+    font-size:1.05rem;
+    color:var(--accent, var(--cyan));
+  }
+  .concept-card p{
+    margin:0;
+    color:var(--ink-dim);
+    font-size:0.92rem;
+  }
+  .concept-card .tag{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:var(--ink);
+    background:rgba(255,255,255,0.06);
+    padding:2px 8px;
+    border-radius:20px;
+    margin-bottom:10px;
+  }
+  .c-clase{--accent:var(--cyan);}
+  .c-objeto{--accent:var(--amber);}
+  .c-atributo{--accent:var(--gold);}
+  .c-metodo{--accent:var(--coral);}
+
+  /* ---------- LAB ---------- */
+  .lab-layout{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    gap:30px;
+    margin-top:30px;
+    align-items:start;
+  }
+  @media (max-width:820px){ .lab-layout{grid-template-columns:1fr;} }
+
+  .lab-controls{ position:sticky; top:80px; }
+  @media (max-width:820px){ .lab-controls{ position:static; } }
+
+  .btn{
+    font-family:'IBM Plex Mono', monospace;
+    background:var(--amber);
+    color:#241505;
+    border:none;
+    padding:12px 18px;
+    border-radius:9px;
+    font-weight:600;
+    font-size:0.86rem;
+    cursor:pointer;
+    width:100%;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 18px -8px rgba(242,161,84,0.6); }
+  .btn:active{ transform:translateY(0); }
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-dim);
+    margin-top:10px;
+  }
+  .btn-ghost:hover{ border-color:var(--cyan); color:var(--cyan); box-shadow:none;}
+
+  .objects-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+    gap:16px;
+    min-height:120px;
+  }
+  .empty-hint{
+    grid-column:1/-1;
+    border:1.5px dashed var(--line);
+    border-radius:var(--radius);
+    padding:30px;
+    text-align:center;
+    color:var(--ink-dim);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+  }
+
+  .object-card{
+    background:#182b3e;
+    border:1.5px solid rgba(242,161,84,0.45);
+    border-radius:12px;
+    padding:16px;
+    position:relative;
+    animation:materialize .55s ease-out;
+  }
+  @keyframes materialize{
+    0%{ opacity:0; transform:scale(.85) translateY(-6px); border-color:var(--cyan); background:transparent; }
+    60%{ border-color:var(--amber); }
+    100%{ opacity:1; transform:scale(1) translateY(0); }
+  }
+  .object-card h4{
+    margin:0 0 10px 0;
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--amber);
+    font-size:0.95rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .object-card .close{
+    background:none; border:none; color:var(--ink-dim); cursor:pointer; font-size:0.95rem;
+  }
+  .object-card .close:hover{ color:var(--coral); }
+  .attr-line{
+    display:flex;
+    justify-content:space-between;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    color:var(--ink-dim);
+    margin-bottom:4px;
+  }
+  .attr-line b{ color:var(--gold); font-weight:600; }
+  .energy-bar{
+    height:6px;
+    border-radius:4px;
+    background:rgba(255,255,255,0.08);
+    margin:8px 0 12px 0;
+    overflow:hidden;
+  }
+  .energy-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--coral), var(--gold));
+    transition:width .35s ease;
+  }
+  .method-row{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;}
+  .m-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    background:rgba(239,111,108,0.14);
+    border:1px solid rgba(239,111,108,0.4);
+    color:var(--coral);
+    padding:6px 9px;
+    border-radius:7px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .m-btn:hover{ background:rgba(239,111,108,0.28); }
+  .speech{
+    margin-top:10px;
+    font-size:0.78rem;
+    background:rgba(127,212,239,0.1);
+    border:1px solid var(--cyan-dim);
+    color:var(--cyan);
+    padding:7px 9px;
+    border-radius:8px;
+    display:none;
+  }
+  .speech.show{ display:block; animation:pop .25s ease; }
+  @keyframes pop{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:translateY(0);} }
+  .goal-pop{
+    position:absolute;
+    right:14px;
+    top:10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:var(--gold);
+    opacity:0;
+  }
+  .goal-pop.fly{ animation:fly .8s ease-out; }
+  @keyframes fly{
+    0%{ opacity:1; transform:translateY(0);}
+    100%{ opacity:0; transform:translateY(-18px);}
+  }
+
+  /* ---------- DB CLARIFY ---------- */
+  .db-panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:26px 26px 30px 26px;
+    margin-top:26px;
+  }
+  .toggle-row{
+    display:inline-flex;
+    background:rgba(255,255,255,0.05);
+    border-radius:30px;
+    padding:4px;
+    margin-bottom:22px;
+  }
+  .toggle-row button{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.8rem;
+    padding:8px 16px;
+    border-radius:24px;
+    border:none;
+    background:transparent;
+    color:var(--ink-dim);
+    cursor:pointer;
+  }
+  .toggle-row button.active{
+    background:var(--cyan);
+    color:#062434;
+    font-weight:600;
+  }
+  .view{ display:none; }
+  .view.active{ display:block; animation:pop .25s ease; }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.82rem;
+  }
+  th, td{
+    text-align:left;
+    padding:9px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  th{ color:var(--ink-dim); font-weight:600; text-transform:uppercase; font-size:0.7rem; letter-spacing:0.06em; }
+  .db-note{
+    margin-top:18px;
+    font-size:0.85rem;
+    color:var(--ink-dim);
+    border-top:1px dashed var(--line);
+    padding-top:16px;
+  }
+  .db-note b{ color:var(--ink); }
+
+  /* ---------- CHEATSHEET ---------- */
+  .cheat-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:14px;
+    margin-top:28px;
+  }
+  @media (max-width:700px){ .cheat-grid{grid-template-columns:1fr;} }
+  .cheat-item{
+    display:flex;
+    gap:12px;
+    padding:14px 16px;
+    background:var(--panel-soft);
+    border-radius:10px;
+    border-left:3px solid var(--accent, var(--cyan));
+  }
+  .cheat-item .k{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--accent, var(--cyan));
+    font-weight:600;
+    min-width:78px;
+  }
+  .cheat-item p{ margin:0; color:var(--ink-dim); font-size:0.88rem; }
+
+  .cta{
+    margin-top:36px;
+    background:linear-gradient(135deg, rgba(242,161,84,0.14), rgba(127,212,239,0.08));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 24px;
+  }
+  .cta h3{ margin:0 0 8px 0; color:var(--amber); }
+  .cta p{ margin:0; color:var(--ink-dim); font-size:0.92rem; }
+
+  footer{
+    text-align:center;
+    color:var(--ink-dim);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    padding:30px 6vw 50px 6vw;
+    opacity:0.65;
+  }
+
+  /* ---------- ACTIVIDAD PELUQUERÍA ---------- */
+  .activity-brief{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 24px;
+    margin-top:26px;
+  }
+  .activity-brief h3{ margin:0 0 10px 0; color:var(--cyan); font-size:1.05rem; }
+  .activity-brief ul{ margin:10px 0 0 0; padding-left:20px; color:var(--ink-dim); font-size:0.92rem; }
+  .activity-brief li{ margin-bottom:4px; }
+  .activity-note{
+    margin-top:14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    color:var(--gold);
+    border-top:1px dashed var(--line);
+    padding-top:12px;
+  }
+
+  .activity-board{
+    margin-top:24px;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:20px;
+  }
+
+  .chip-pool{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    padding:18px;
+    background:var(--panel-soft);
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    min-height:56px;
+  }
+  .hint-bar{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.8rem;
+    color:var(--ink-dim);
+    margin-bottom:6px;
+    min-height:18px;
+  }
+  .hint-bar.warn{ color:var(--coral); }
+  .hint-bar.ok{ color:var(--gold); }
+
+  .chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.8rem;
+    background:#1c3450;
+    border:1px solid var(--cyan-dim);
+    color:var(--ink);
+    padding:8px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .chip:hover{ transform:translateY(-1px); border-color:var(--cyan); }
+  .chip.correct-flash{ animation:correctFlash .5s ease; }
+  .chip.wrong-flash{ animation:wrongFlash .45s ease; }
+  @keyframes correctFlash{
+    0%{ background:#1c3450; }
+    40%{ background:rgba(80,200,140,0.45); transform:scale(1.06); }
+    100%{ background:#1c3450; }
+  }
+  @keyframes wrongFlash{
+    0%{ transform:translateX(0); }
+    25%{ transform:translateX(-6px); background:rgba(239,111,108,0.35); }
+    50%{ transform:translateX(6px); }
+    75%{ transform:translateX(-4px); }
+    100%{ transform:translateX(0); background:#1c3450; }
+  }
+
+  .zones-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:16px;
+  }
+  @media (max-width:900px){ .zones-grid{ grid-template-columns:1fr; } }
+
+  .class-zone{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .class-zone .class-title{
+    font-family:'IBM Plex Mono', monospace;
+    text-align:center;
+    padding:9px 0;
+    background:rgba(127,212,239,0.1);
+    color:var(--cyan);
+    font-weight:600;
+    border-bottom:1px solid var(--line);
+  }
+  .subzone{
+    padding:12px 14px;
+    border-bottom:1px dashed var(--line);
+    cursor:pointer;
+    transition:background .15s ease, box-shadow .15s ease;
+  }
+  .subzone:last-child{ border-bottom:none; }
+  .subzone .sub-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-dim);
+    display:block;
+    margin-bottom:8px;
+  }
+  .subzone.attrs .sub-label{ color:var(--gold); }
+  .subzone.methods .sub-label{ color:var(--coral); }
+  .subzone.armed{
+    background:rgba(127,212,239,0.08);
+    box-shadow:inset 0 0 0 1.5px var(--cyan);
+  }
+  .subzone .chip-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    min-height:10px;
+  }
+  .subzone .chip{
+    cursor:default;
+    background:transparent;
+    border-color:rgba(255,255,255,0.15);
+    opacity:0.95;
+  }
+  .subzone.attrs .chip{ border-color:rgba(242,193,78,0.5); color:var(--gold); }
+  .subzone.methods .chip{ border-color:rgba(239,111,108,0.5); color:var(--coral); }
+  .chip-locked-ok{ box-shadow:0 0 0 1.5px rgba(80,200,140,0.6) inset; }
+
+  .discard-zone{
+    background:var(--panel);
+    border:1px dashed var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    cursor:pointer;
+    transition:background .15s ease, box-shadow .15s ease;
+  }
+  .discard-zone .sub-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:var(--ink-dim);
+    display:block;
+    margin-bottom:8px;
+  }
+  .discard-zone.armed{ background:rgba(127,212,239,0.08); box-shadow:inset 0 0 0 1.5px var(--cyan); }
+  .discard-zone .chip-list{ display:flex; flex-wrap:wrap; gap:6px; min-height:10px; }
+
+  .score-bar{
+    margin-top:16px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    color:var(--ink-dim);
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .score-bar b{ color:var(--gold); }
+  .btn-reset{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-dim);
+    padding:6px 12px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .btn-reset:hover{ border-color:var(--cyan); color:var(--cyan); }
+
+  .win-banner{
+    margin-top:18px;
+    background:linear-gradient(135deg, rgba(242,161,84,0.14), rgba(127,212,239,0.08));
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    display:none;
+    font-size:0.9rem;
+    color:var(--ink);
+  }
+  .win-banner.show{ display:block; animation:pop .3s ease; }
+  .win-banner b{ color:var(--amber); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-overlay"></div>
+
+<header class="topbar">
+  <span class="brand">POO · <b>del plano al objeto</b></span>
+  <nav>
+    <a href="#conceptos">Conceptos</a>
+    <a href="#laboratorio">Laboratorio</a>
+    <a href="#base-de-datos">¿Y la base de datos?</a>
+    <a href="#resumen">Resumen</a>
+    <a href="#actividad">Actividad</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero" id="inicio">
+    <div>
+      <p class="eyebrow">Repaso · 4 conceptos</p>
+      <h1>Ya tienen el <span>plano</span>.<br>Ahora vamos a construir lo que <span>hace</span>.</h1>
+      <p class="lead">Antes de las vacaciones armaron 3 clases en UML: el molde de sus objetos. Lo que falta es la parte que les cuesta: escribir los métodos, y dejar en claro que una clase no es una tabla de base de datos.</p>
+      <div class="hero-anim">
+        <span class="mono" style="color:var(--cyan)">CLASE</span>
+        <div class="stamp-track"><div class="stamp-dot"></div></div>
+        <span class="mono" style="color:var(--amber)">OBJETO</span>
+      </div>
+    </div>
+
+    <div class="blueprint-box">
+      <div class="blueprint-title">Jugador</div>
+      <div class="blueprint-section">
+        <span class="label">Atributos</span>
+        <div class="row"><span class="t">-</span> nombre: String</div>
+        <div class="row"><span class="t">-</span> dorsal: int</div>
+        <div class="row"><span class="t">-</span> goles: int</div>
+        <div class="row"><span class="t">-</span> cansancio: int</div>
+      </div>
+      <div class="blueprint-section methods">
+        <span class="label">Métodos</span>
+        <div class="row"><span class="t">+</span> marcarGol(): void</div>
+        <div class="row"><span class="t">+</span> entrenar(): void</div>
+        <div class="row"><span class="t">+</span> presentarse(): String</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONCEPTS -->
+  <section id="conceptos">
+    <p class="eyebrow">Los cuatro que vamos a fijar</p>
+    <h2 style="margin:0 0 8px 0; font-size:1.6rem;">Clase, objeto, atributo, método</h2>
+    <p class="lead">Todo con el mismo ejemplo: la clase <code>Jugador</code> que ya conocen.</p>
+
+    <div class="concepts-grid">
+      <div class="concept-card c-clase">
+        <span class="tag">el plano</span>
+        <h3>Clase</h3>
+        <p>Es el molde. Define qué atributos y qué métodos va a tener <em>cualquier</em> jugador, pero no es ningún jugador en particular. En UML es el rectángulo que ya dibujaron.</p>
+      </div>
+      <div class="concept-card c-objeto">
+        <span class="tag">lo real</span>
+        <h3>Objeto</h3>
+        <p>Es una instancia concreta de la clase: un jugador con nombre propio, dorsal propio y goles propios. De una misma clase salen tantos objetos como necesiten.</p>
+      </div>
+      <div class="concept-card c-atributo">
+        <span class="tag">el dato</span>
+        <h3>Atributo</h3>
+        <p>Es la información que guarda el objeto: <code>nombre</code>, <code>dorsal</code>, <code>goles</code>, <code>cansancio</code>. Cada objeto tiene su propia copia, con sus propios valores.</p>
+      </div>
+      <div class="concept-card c-metodo">
+        <span class="tag">la acción</span>
+        <h3>Método</h3>
+        <p>Es lo que el objeto sabe hacer: <code>marcarGol()</code>, <code>entrenar()</code>. Un método casi siempre lee o modifica los atributos de ese mismo objeto.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAB -->
+  <section id="laboratorio">
+    <p class="eyebrow">Laboratorio</p>
+    <h2 style="margin:0 0 8px 0; font-size:1.6rem;">Instanciá objetos y probá sus métodos</h2>
+    <p class="lead">Cada click en "Instanciar objeto" crea un <code>Jugador</code> nuevo a partir del mismo plano. Fíjense que cada uno guarda sus propios valores: si uno marca un gol, a los demás no les cambia nada.</p>
+
+    <div class="lab-layout">
+      <div class="lab-controls">
+        <button class="btn" id="btnCrear">+ Instanciar objeto</button>
+        <button class="btn btn-ghost" id="btnLimpiar">Vaciar laboratorio</button>
+      </div>
+      <div class="objects-grid" id="objectsGrid">
+        <div class="empty-hint" id="emptyHint">Todavía no instanciaron ningún objeto.<br>Apretá "Instanciar objeto" para crear el primero.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DB CLARIFY -->
+  <section id="base-de-datos">
+    <p class="eyebrow">La confusión más común</p>
+    <h2 style="margin:0 0 8px 0; font-size:1.6rem;">¿Esto es lo mismo que una tabla de base de datos?</h2>
+    <p class="lead">Parecido, sí. Igual, no. Miren los mismos datos representados de las dos formas.</p>
+
+    <div class="db-panel">
+      <div class="toggle-row">
+        <button id="toggleTabla" class="active">Vista tabla (BD)</button>
+        <button id="toggleObjetos">Vista objetos (POO)</button>
+      </div>
+
+      <div class="view active" id="viewTabla">
+        <table>
+          <thead>
+            <tr><th>nombre</th><th>dorsal</th><th>goles</th><th>cansancio</th></tr>
+          </thead>
+          <tbody id="tablaBody">
+            <tr><td colspan="4" style="color:var(--ink-dim)">Instanciá objetos en el laboratorio para verlos acá.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="view" id="viewObjetos">
+        <p style="color:var(--ink-dim); font-family:'IBM Plex Mono', monospace; font-size:0.82rem;">Los mismos datos, pero cada fila ahora "sabe hacer cosas": bajá al laboratorio y usá los botones de método de cada objeto.</p>
+      </div>
+
+      <div class="db-note">
+        <b>La diferencia real:</b> una fila de una tabla es solo dato quieto. Para hacerle algo (sumar un gol, bajar el cansancio) necesitás un programa aparte que lea la fila, la modifique y la vuelva a guardar. Un objeto, en cambio, <b>junta el dato y el comportamiento en el mismo lugar</b>: el objeto mismo tiene el método <code>marcarGol()</code>, no hace falta nada externo. Por eso una clase no es una tabla, y un objeto no es una fila: se parecen en la forma, pero un objeto además sabe actuar.
+      </div>
+    </div>
+  </section>
+
+  <!-- CHEATSHEET -->
+  <section id="resumen">
+    <p class="eyebrow">Para tener a mano</p>
+    <h2 style="margin:0 0 8px 0; font-size:1.6rem;">Resumen rápido</h2>
+
+    <div class="cheat-grid">
+      <div class="cheat-item" style="--accent:var(--cyan)">
+        <span class="k">Clase</span>
+        <p>El molde. Se define una sola vez.</p>
+      </div>
+      <div class="cheat-item" style="--accent:var(--amber)">
+        <span class="k">Objeto</span>
+        <p>Una instancia real de esa clase, con valores propios.</p>
+      </div>
+      <div class="cheat-item" style="--accent:var(--gold)">
+        <span class="k">Atributo</span>
+        <p>Un dato que el objeto guarda (su estado).</p>
+      </div>
+      <div class="cheat-item" style="--accent:var(--coral)">
+        <span class="k">Método</span>
+        <p>Una acción que el objeto puede hacer (su comportamiento).</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ACTIVIDAD PELUQUERÍA -->
+  <section id="actividad">
+    <p class="eyebrow">Actividad · Solo identificación, todavía sin código</p>
+    <h2 style="margin:0 0 8px 0; font-size:1.6rem;">Sistema de reservas para una peluquería</h2>
+
+    <div class="activity-brief">
+      <h3>El problema</h3>
+      <p class="lead" style="margin-bottom:10px;">Una peluquería anota los turnos en papel o por WhatsApp, pero a veces se olvida de los horarios, se superponen reservas o no queda claro qué servicio pidió cada cliente. El negocio necesita un programa simple para:</p>
+      <ul>
+        <li>Registrar clientes.</li>
+        <li>Registrar servicios.</li>
+        <li>Reservar horarios.</li>
+        <li>Ver qué cliente tiene turno.</li>
+        <li>Evitar horarios repetidos.</li>
+      </ul>
+      <p class="activity-note">Todavía no vamos a programar nada. El objetivo es identificar clases, atributos y métodos, y que los métodos queden nombrados con buenas prácticas (verbos claros, que digan exactamente qué acción hacen).</p>
+    </div>
+
+    <div class="activity-board">
+      <div>
+        <div class="hint-bar" id="hintBar">Paso 1: tocá una casilla (por ejemplo "Cliente → Atributos"). Paso 2: tocá una etiqueta del banco para colocarla ahí. Cuando termines de ubicarlas todas, apretá "Evaluar".</div>
+        <div class="chip-pool" id="chipPool"></div>
+      </div>
+
+      <div class="zones-grid">
+        <div class="class-zone">
+          <div class="class-title">Cliente</div>
+          <div class="subzone attrs" data-zone="cliente-attr">
+            <span class="sub-label">Atributos</span>
+            <div class="chip-list"></div>
+          </div>
+          <div class="subzone methods" data-zone="cliente-method">
+            <span class="sub-label">Métodos</span>
+            <div class="chip-list"></div>
+          </div>
+        </div>
+
+        <div class="class-zone">
+          <div class="class-title">Servicio</div>
+          <div class="subzone attrs" data-zone="servicio-attr">
+            <span class="sub-label">Atributos</span>
+            <div class="chip-list"></div>
+          </div>
+          <div class="subzone methods" data-zone="servicio-method">
+            <span class="sub-label">Métodos</span>
+            <div class="chip-list"></div>
+          </div>
+        </div>
+
+        <div class="class-zone">
+          <div class="class-title">Reserva</div>
+          <div class="subzone attrs" data-zone="reserva-attr">
+            <span class="sub-label">Atributos</span>
+            <div class="chip-list"></div>
+          </div>
+          <div class="subzone methods" data-zone="reserva-method">
+            <span class="sub-label">Métodos</span>
+            <div class="chip-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="discard-zone" data-zone="descarte">
+        <span class="sub-label">Esto no es atributo ni método de ninguna clase (es una idea general, no un dato ni una acción de un objeto)</span>
+        <div class="chip-list"></div>
+      </div>
+
+      <div class="score-bar">
+        <span id="scoreLabel">Colocados: <b id="scoreCount">0</b> / <b id="scoreTotal">0</b></span>
+        <button class="btn" style="width:auto; padding:8px 16px;" id="btnEvaluar">Evaluar</button>
+        <button class="btn-reset" id="btnReiniciar">Reiniciar actividad</button>
+      </div>
+
+      <div class="win-banner" id="winBanner">
+        <b>¡Listo!</b> Ya identificaron las 3 clases del sistema de reservas. Noten que todos los métodos quedaron nombrados como una acción (un verbo): <code>reservarHorario()</code>, <code>verificarDisponibilidad()</code>, <code>cancelarReserva()</code>. Esa es la buena práctica: el nombre del método tiene que decir, sin ambigüedad, qué hace.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>POO · Profesor Bruno Silva</footer>
+
+<script>
+(function(){
+  const nombres = ["Nico","Fede","Santi","Rodra","Gastón","Maxi","Emi","Vale","Cami","Bruno","Nati","Agus"];
+  let objetos = [];
+  let contador = 0;
+
+  const grid = document.getElementById('objectsGrid');
+  const emptyHint = document.getElementById('emptyHint');
+  const tablaBody = document.getElementById('tablaBody');
+
+  function nombreAlAzar(){
+    return nombres[Math.floor(Math.random()*nombres.length)];
+  }
+
+  function crearObjeto(){
+    contador++;
+    const obj = {
+      id: 'obj-' + contador,
+      nombre: nombreAlAzar(),
+      dorsal: Math.floor(Math.random()*98)+1,
+      goles: 0,
+      cansancio: Math.floor(Math.random()*30)+15
+    };
+    objetos.push(obj);
+    render();
+  }
+
+  function eliminarObjeto(id){
+    objetos = objetos.filter(o => o.id !== id);
+    render();
+  }
+
+  function marcarGol(id){
+    const o = objetos.find(o => o.id === id);
+    if(!o) return;
+    o.goles += 1;
+    o.cansancio = Math.min(100, o.cansancio + 6);
+    render();
+    const goalEl = document.querySelector(`[data-goal="${id}"]`);
+    if(goalEl){
+      goalEl.classList.remove('fly');
+      void goalEl.offsetWidth;
+      goalEl.classList.add('fly');
+    }
+  }
+
+  function entrenar(id){
+    const o = objetos.find(o => o.id === id);
+    if(!o) return;
+    o.cansancio = Math.max(0, o.cansancio - 15);
+    render();
+  }
+
+  function presentarse(id){
+    const o = objetos.find(o => o.id === id);
+    if(!o) return;
+    const bubble = document.querySelector(`[data-speech="${id}"]`);
+    if(bubble){
+      bubble.textContent = `"Hola, soy ${o.nombre}, uso la camiseta número ${o.dorsal}."`;
+      bubble.classList.add('show');
+    }
+  }
+
+  function render(){
+    grid.innerHTML = '';
+    if(objetos.length === 0){
+      grid.appendChild(emptyHint);
+    } else {
+      objetos.forEach(o => {
+        const card = document.createElement('div');
+        card.className = 'object-card';
+        card.innerHTML = `
+          <h4>${o.nombre} <button class="close" title="Eliminar objeto" data-close="${o.id}">✕</button></h4>
+          <div class="goal-pop" data-goal="${o.id}">+1 gol</div>
+          <div class="attr-line"><span>dorsal</span><b>${o.dorsal}</b></div>
+          <div class="attr-line"><span>goles</span><b>${o.goles}</b></div>
+          <div class="attr-line"><span>cansancio</span><b>${o.cansancio}</b></div>
+          <div class="energy-bar"><div class="energy-fill" style="width:${o.cansancio}%"></div></div>
+          <div class="method-row">
+            <button class="m-btn" data-gol="${o.id}">marcarGol()</button>
+            <button class="m-btn" data-entrenar="${o.id}">entrenar()</button>
+            <button class="m-btn" data-presentar="${o.id}">presentarse()</button>
+          </div>
+          <div class="speech" data-speech="${o.id}"></div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // tabla view
+    if(objetos.length === 0){
+      tablaBody.innerHTML = '<tr><td colspan="4" style="color:var(--ink-dim)">Instanciá objetos en el laboratorio para verlos acá.</td></tr>';
+    } else {
+      tablaBody.innerHTML = objetos.map(o => `
+        <tr><td>${o.nombre}</td><td>${o.dorsal}</td><td>${o.goles}</td><td>${o.cansancio}</td></tr>
+      `).join('');
+    }
+  }
+
+  grid.addEventListener('click', (e) => {
+    const gol = e.target.getAttribute('data-gol');
+    const entr = e.target.getAttribute('data-entrenar');
+    const pres = e.target.getAttribute('data-presentar');
+    const close = e.target.getAttribute('data-close');
+    if(gol) marcarGol(gol);
+    if(entr) entrenar(entr);
+    if(pres) presentarse(pres);
+    if(close) eliminarObjeto(close);
+  });
+
+  document.getElementById('btnCrear').addEventListener('click', crearObjeto);
+  document.getElementById('btnLimpiar').addEventListener('click', () => { objetos = []; render(); });
+
+  // toggle tabla / objetos
+  const toggleTabla = document.getElementById('toggleTabla');
+  const toggleObjetos = document.getElementById('toggleObjetos');
+  const viewTabla = document.getElementById('viewTabla');
+  const viewObjetos = document.getElementById('viewObjetos');
+
+  toggleTabla.addEventListener('click', () => {
+    toggleTabla.classList.add('active');
+    toggleObjetos.classList.remove('active');
+    viewTabla.classList.add('active');
+    viewObjetos.classList.remove('active');
+  });
+  toggleObjetos.addEventListener('click', () => {
+    toggleObjetos.classList.add('active');
+    toggleTabla.classList.remove('active');
+    viewObjetos.classList.add('active');
+    viewTabla.classList.remove('active');
+    document.getElementById('laboratorio').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  // arrancar con dos objetos de ejemplo
+  crearObjeto();
+  crearObjeto();
+})();
+</script>
+
+<script>
+(function(){
+  const items = [
+    { id:'i1', label:'nombre del cliente', zone:'cliente-attr', placedZone:null },
+    { id:'i2', label:'teléfono del cliente', zone:'cliente-attr', placedZone:null },
+    { id:'i3', label:'actualizarTeléfono()', zone:'cliente-method', placedZone:null },
+    { id:'i4', label:'nombre del servicio', zone:'servicio-attr', placedZone:null },
+    { id:'i5', label:'duración en minutos', zone:'servicio-attr', placedZone:null },
+    { id:'i6', label:'precio', zone:'servicio-attr', placedZone:null },
+    { id:'i7', label:'actualizarPrecio()', zone:'servicio-method', placedZone:null },
+    { id:'i8', label:'fecha y hora del turno', zone:'reserva-attr', placedZone:null },
+    { id:'i9', label:'cliente asociado', zone:'reserva-attr', placedZone:null },
+    { id:'i10', label:'servicio asociado', zone:'reserva-attr', placedZone:null },
+    { id:'i11', label:'reservarHorario()', zone:'reserva-method', placedZone:null },
+    { id:'i12', label:'verificarDisponibilidad()', zone:'reserva-method', placedZone:null },
+    { id:'i13', label:'cancelarReserva()', zone:'reserva-method', placedZone:null },
+    { id:'i14', label:'la peluquería', zone:'descarte', placedZone:null },
+    { id:'i15', label:'WhatsApp', zone:'descarte', placedZone:null }
+  ];
+
+  let armed = null;
+  const pool = document.getElementById('chipPool');
+  const hintBar = document.getElementById('hintBar');
+  const winBanner = document.getElementById('winBanner');
+  const scoreLabel = document.getElementById('scoreLabel');
+  const scoreCount = document.getElementById('scoreCount');
+  const btnEvaluar = document.getElementById('btnEvaluar');
+  document.getElementById('scoreTotal').textContent = items.length;
+
+  const DEFAULT_HINT = 'Paso 1: tocá una casilla (por ejemplo "Cliente → Atributos"). Paso 2: tocá una etiqueta del banco para colocarla ahí. Cuando termines de ubicarlas todas, apretá "Evaluar".';
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  function setHint(text, mode){
+    hintBar.textContent = text;
+    hintBar.className = 'hint-bar' + (mode ? ' ' + mode : '');
+  }
+
+  function labelForZone(zoneKey){
+    const map = {
+      'cliente-attr':'Cliente → Atributos', 'cliente-method':'Cliente → Métodos',
+      'servicio-attr':'Servicio → Atributos', 'servicio-method':'Servicio → Métodos',
+      'reserva-attr':'Reserva → Atributos', 'reserva-method':'Reserva → Métodos',
+      'descarte':'No pertenece a ninguna clase'
+    };
+    return map[zoneKey] || zoneKey;
+  }
+
+  function armZone(zoneEl){
+    document.querySelectorAll('.subzone, .discard-zone').forEach(z => z.classList.remove('armed'));
+    const key = zoneEl.getAttribute('data-zone');
+    if(armed === key){
+      armed = null;
+      setHint(DEFAULT_HINT);
+      return;
+    }
+    armed = key;
+    zoneEl.classList.add('armed');
+    setHint('Zona elegida: "' + labelForZone(armed) + '". Ahora tocá una etiqueta del banco para colocarla acá.', 'ok');
+  }
+
+  function renderAll(){
+    // pool
+    pool.innerHTML = '';
+    shuffle(items.filter(i => !i.placedZone)).forEach(item => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.textContent = item.label;
+      chip.setAttribute('data-id', item.id);
+      pool.appendChild(chip);
+    });
+    // zonas
+    document.querySelectorAll('.chip-list').forEach(l => l.innerHTML = '');
+    items.filter(i => i.placedZone).forEach(item => {
+      const listEl = document.querySelector(`[data-zone="${item.placedZone}"] .chip-list`);
+      if(!listEl) return;
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.setAttribute('data-placed-id', item.id);
+      chip.textContent = item.label;
+      if(item.status === 'correct') chip.classList.add('chip-locked-ok');
+      listEl.appendChild(chip);
+    });
+    const placedTotal = items.filter(i => i.placedZone).length;
+    scoreCount.textContent = placedTotal;
+  }
+
+  pool.addEventListener('click', (e) => {
+    const id = e.target.getAttribute('data-id');
+    if(!id) return;
+    const item = items.find(i => i.id === id);
+    if(!armed){
+      setHint('Primero tocá una casilla para elegir dónde va esta etiqueta.', 'warn');
+      return;
+    }
+    item.placedZone = armed;
+    item.status = null;
+    renderAll();
+  });
+
+  document.querySelectorAll('.subzone, .discard-zone').forEach(zone => {
+    zone.addEventListener('click', (e) => {
+      if(e.target.closest('.chip-list')) return;
+      armZone(zone);
+    });
+  });
+
+  btnEvaluar.addEventListener('click', () => {
+    const faltan = items.filter(i => !i.placedZone).length;
+    if(faltan > 0){
+      setHint('Todavía te faltan ' + faltan + ' etiquetas por colocar antes de evaluar.', 'warn');
+      return;
+    }
+    let wrongEls = [];
+    items.forEach(item => {
+      if(item.placedZone === item.zone){
+        item.status = 'correct';
+      } else {
+        item.status = 'wrong';
+      }
+    });
+    renderAll();
+    // flash the wrong ones, then send them back to the pool without saying why
+    items.filter(i => i.status === 'wrong').forEach(item => {
+      const chipEl = document.querySelector(`[data-placed-id="${item.id}"]`);
+      if(chipEl) chipEl.classList.add('wrong-flash');
+    });
+    const wrongCount = items.filter(i => i.status === 'wrong').length;
+    if(wrongCount === 0){
+      setHint('¡Perfecto, las 15 quedaron en el lugar correcto!', 'ok');
+      winBanner.classList.add('show');
+      scoreLabel.innerHTML = 'Correctos: <b>' + items.length + '</b> / <b>' + items.length + '</b>';
+    } else {
+      setHint('Hay ' + wrongCount + ' etiqueta(s) mal ubicadas (quedaron marcadas). Volvé a colocarlas.', 'warn');
+      scoreLabel.innerHTML = 'Correctos: <b>' + (items.length - wrongCount) + '</b> / <b>' + items.length + '</b>';
+      setTimeout(() => {
+        items.forEach(item => {
+          if(item.status === 'wrong'){
+            item.placedZone = null;
+            item.status = null;
+          }
+        });
+        renderAll();
+      }, 700);
+    }
+  });
+
+  document.getElementById('btnReiniciar').addEventListener('click', () => {
+    items.forEach(i => { i.placedZone = null; i.status = null; });
+    armed = null;
+    winBanner.classList.remove('show');
+    document.querySelectorAll('.subzone, .discard-zone').forEach(z => z.classList.remove('armed'));
+    setHint(DEFAULT_HINT);
+    scoreLabel.innerHTML = 'Colocados: <b id="scoreCount">0</b> / <b id="scoreTotal">' + items.length + '</b>';
+    renderAll();
+  });
+
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
